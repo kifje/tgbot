@@ -1,8 +1,8 @@
 import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters import Text
-
-from get import get_picture, tomorrow_picture
+from get import get_picture, tomorrow_picture, get_picture_dweek
+from datatime import get_week
 
 API_TOKEN = ''
 
@@ -24,11 +24,14 @@ async def send_welcome(message: types.Message):
   keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
   buttons = [
       types.KeyboardButton("Расписание обедов"),
-      types.KeyboardButton("Меню")
+      types.KeyboardButton("Меню столовой"),
+      types.KeyboardButton("Неделя"),
+      types.KeyboardButton('Пары')
+    
   ]
   keyboard.add(*buttons) 
 
-  await message.reply("Привет!\nЯ покажу тебе расписание и меню обеда группы CA-320.", reply_markup=keyboard)
+  await message.reply("Привет!\nЯ покажу тебе расписание и меню обеда группы CA-420.", reply_markup=keyboard)
 
 
 
@@ -52,11 +55,11 @@ async def rasp(message: types.Message):
 async def send_rasp(call: types.CallbackQuery): 
   # days=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"]
   days = {
-  "Понедельник" : "С 14:40 до 15:00",
-  "Вторник" : "С 10:30 до 10:50",
-  "Среда" : "С 12:20 до 12:40",
-  "Четверг" : "С 16:00 до 16:10",
-  "Пятница" : "С 10:30 до 10:50",
+  "Понедельник" : "С 11:00 до 11:20",
+  "Вторник" : "С 16:00 до 16:10",
+  "Среда" : "С 10:30 до 10:50",
+  "Четверг" : "С 12:20 до 12:40",
+  "Пятница" : "С 12:20 до 12:40",
   # "Суббота" : "капец ты лох"
   }
 
@@ -69,7 +72,7 @@ async def send_rasp(call: types.CallbackQuery):
 
 
 
-@dp.message_handler(Text(equals="Меню"))
+@dp.message_handler(Text(equals="Меню столовой"))
 async def menu(message: types.Message):
   # await message.reply_photo(await get_picture())
 
@@ -86,14 +89,80 @@ async def send_menu(call: types.CallbackQuery):
     "Сегодня" : await get_picture(),
     "Завтра" : await tomorrow_picture()
   }
+  try:
+    for day in menu:
+      if day == call.data:
+        if type(menu[day]) == str:
+          await call.message.answer(menu[day]) 
+        else:
+          await call.message.answer_photo(menu[day])
+  except Exception:
+    await call.message.answer('Меню не выложили!')
 
-  for day in menu:
-    if day == call.data:
-      if type(menu[day]) == str:
-        await call.message.answer(menu[day]) 
-      else:
-        await call.message.answer_photo(menu[day])
-       
+
+
+@dp.message_handler(Text(equals="Неделя"))
+async def week(message: types.Message):
+  tweek = await get_week()
+  if tweek % 2 == 0:
+    await message.answer("Четная(синяя)")
+  else:
+    await message.answer("Нечетная(красная)")
+
+# @dp.message_handler(Text(equals="Пары"))
+# async def pari(message: types.Message):
+#   pari = await pari_picture()
+#   await message.answer_photo(pari)
+
+@dp.message_handler(Text(equals="Пары"))
+async def pari(message: types.Message):
+  dweekpic = await get_picture_dweek()
+  await message.answer_photo(dweekpic)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
